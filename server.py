@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template
 from sentence_transformers import SentenceTransformer
 from scipy.spatial.distance import cosine
 import numpy as np
@@ -8,6 +8,7 @@ import os
 import content
 
 app = Flask(__name__)
+
 
 class Sentence:
     def __init__(self, id, content, model):
@@ -64,6 +65,10 @@ def get_graph():
     # Convert graph to JSON-serializable format
     graph_data = nx.node_link_data(G)
     return jsonify(graph_data)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

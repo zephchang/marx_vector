@@ -1,5 +1,7 @@
 'use strict';
 
+cytoscape.use(cytoscapeCola);
+
 document.addEventListener('DOMContentLoaded', function () {
   fetch('/api/graph')
     .then((response) => response.json())
@@ -18,30 +20,31 @@ document.addEventListener('DOMContentLoaded', function () {
           {
             selector: 'edge',
             style: {
-              width: 'data(weight)',
+              width: 2,
               'line-color': '#ccc',
               'curve-style': 'bezier',
+              opacity: 'data(weight)', // Use cosine similarity as edge opacity
             },
           },
         ],
         layout: {
-          name: 'cose',
-          idealEdgeLength: 100,
-          nodeOverlap: 20,
-          refresh: 20,
-          fit: true,
-          padding: 30,
+          name: 'cola',
+          nodeSpacing: 30,
+          edgeLength: function (edge) {
+            return edge.data('weight'); // Inverse relationship: higher similarity = shorter edge
+          },
+          animate: true,
           randomize: false,
-          componentSpacing: 100,
-          nodeRepulsion: 400000,
-          edgeElasticity: 100,
-          nestingFactor: 5,
-          gravity: 80,
-          numIter: 1000,
-          initialTemp: 200,
-          coolingFactor: 0.95,
-          minTemp: 1.0,
+          maxSimulationTime: 1500,
         },
+      });
+
+      cy.on('cxttap', function (event) {
+        // Prevent Cytoscape from capturing right-clicks
+        if (event.target === cy) {
+          event.preventDefault();
+          return false;
+        }
       });
 
       cy.on('tap', 'node', function (evt) {
