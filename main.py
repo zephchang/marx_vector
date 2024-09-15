@@ -49,8 +49,7 @@ def create_graph():
             for s2 in sentences:
                 if s1.id < s2.id:  # Avoid duplicate calculations
                     similarity = 1 - cosine(s1.embedding, s2.embedding)
-                    similarity_adjusted = np.exp(similarity * alpha) - 1
-                    G.add_edge(s1.id, s2.id, weight=round(similarity_adjusted, 4))
+                    G.add_edge(s1.id, s2.id, weight=round(similarity, 4))
 
         # Save the graph to a file
         with open(graph_file, 'wb') as f:
@@ -61,6 +60,7 @@ def create_graph():
 
 @app.route('/api/graph')
 def get_graph():
+    print('python BE api called')
     G = create_graph()
     # Convert graph to JSON-serializable format
     graph_data = nx.node_link_data(G)
