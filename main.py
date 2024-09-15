@@ -5,6 +5,9 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import pickle
 import os
+import textwrap
+
+import content
 
 class Sentence:
     def __init__(self, id, content, model):
@@ -21,28 +24,27 @@ alpha = 15
 
 graph_file = 'sentence_graph.pkl'
 
-if os.path.exists(graph_file):
+redo_pkl = False
+
+if not redo_pkl and os.path.exists(graph_file):
     # Load the existing graph if the file exists
     with open(graph_file, 'rb') as f:
         G = pickle.load(f)
     print("Loaded existing graph from file.")
+
 else:
     model = SentenceTransformer('BAAI/bge-large-en-v1.5')
 
     print('start making sentences and calculate embeddings')
+
+    content_chunks = content.combined_notes
     # Create Sentence objects
-    sentences = [
-        Sentence(0, "The sun is shining brightly in the clear blue sky.", model),
-        Sentence(1, "The sun is gleaming intensely in the cloudless azure sky.", model),
-        Sentence(2, "Sunlight radiates brilliantly from the pristine cerulean heavens.", model),
-        Sentence(3, "The feline is resting quietly on the window ledge.", model),
-        Sentence(4, "A cat is napping peacefully on the windowsill.", model),
-        Sentence(5, "Quantum mechanics describes the behavior of subatomic particles.", model),
-        Sentence(6, "The Eiffel Tower is an iconic landmark in Paris, France.", model),
-        Sentence(7, "Photosynthesis is the process by which plants convert light into energy.", model),
-        Sentence(8, "The stock market is experiencing a significant uptrend.", model),
-        Sentence(9, "Financial indicators point to a substantial bull market.", model)
-    ]
+    sentences = []
+
+    for i, content in enumerate(content_chunks):
+        sentence = Sentence(i, content, model)
+        sentences.append(sentence)
+    
     print('done making sentences and calculate embeddings')
     # Create the graph if the file doesn't exist
     for s1 in sentences:
@@ -58,22 +60,60 @@ else:
         pickle.dump(G, f)
     print("Created and saved new graph to file.")
 
-# Calculate layoutp
+# Calculate layout
 pos = nx.spring_layout(G, k=0.5, iterations=50)
 
 # Draw the graph
-plt.figure(figsize=(12, 8))
-nx.draw_networkx_nodes(G, pos, node_size=1000, alpha=0.8)
-nx.draw_networkx_edges(G, pos, width =0.5, alpha=0.5, edge_color='lightgrey')
-nx.draw_networkx_labels(G, pos, {i: f"S{i}" for i in G.nodes()}, font_size=8)
+fig, ax = plt.subplots(figsize=(12, 8))
+nx.draw_networkx_nodes(G, pos, node_size=1000, alpha=0.8, ax=ax)
+nx.draw_networkx_edges(G, pos, width=0.5, alpha=0.5, edge_color='lightgrey', ax=ax)
+nx.draw_networkx_labels(G, pos, {i: f"S{i}" for i in G.nodes()}, font_size=8, ax=ax)
 
 # Add a title
-plt.title("Sentence Similarity Network", fontsize=16)
+ax.set_title("Sentence Similarity Network", fontsize=16)
 
 # Remove axis
-plt.axis('off')
+ax.axis('off')
+# Create annotation object
+annot = ax.annotate("", xy=(0,0), xytext=(20,20), textcoords="offset points",
+                    bbox=dict(boxstyle="round", fc="w"),
+                    arrowprops=dict(arrowstyle="->"))
+annot.set_visible(False)
 
-# Show the plot
+def update_annot(pos, node):
+    annot.xy = pos[node]
+    text = G.nodes[node]['sentence']
+    # Wrap the text to a fixed width
+    wrapped_text = textwrap.fill(text, width=40)
+    annot.set_text(wrapped_text)
+    annot.get_bbox_patch().set_alpha(0.4)
+    # Adjust the bbox to fit the wrapped text
+    bbox = annot.get_bbox_patch()
+    bbox.set_width(250)
+    bbox.set_height(len(wrapped_text.split('\n')) * 20 + 10)
+
+def hover(event):
+    vis = annot.get_visible()
+    if event.inaxes == ax:
+        # Get the current axis limits
+        xlim = ax.get_xlim()
+        ylim = ax.get_ylim()
+        
+        # Calculate a threshold based on the current view
+        threshold = 0.05 * min(xlim[1]-xlim[0], ylim[1]-ylim[0])
+        
+        for node, (x, y) in pos.items():
+            if abs(event.xdata - x) < threshold and abs(event.ydata - y) < threshold:
+                update_annot(pos, node)
+                annot.set_visible(True)
+                fig.canvas.draw_idle()
+                return
+    if vis:
+        annot.set_visible(False)
+        fig.canvas.draw_idle()
+
+fig.canvas.mpl_connect("motion_notify_event", hover)
+
 plt.tight_layout()
 plt.show()
 
