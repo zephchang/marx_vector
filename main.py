@@ -78,6 +78,7 @@ ax.axis('off')
 annot = ax.annotate("", xy=(0,0), xytext=(20,20), textcoords="offset points",
                     bbox=dict(boxstyle="round", fc="w"),
                     arrowprops=dict(arrowstyle="->"))
+
 annot.set_visible(False)
 
 def update_annot(pos, node):
@@ -91,6 +92,8 @@ def update_annot(pos, node):
     bbox = annot.get_bbox_patch()
     bbox.set_width(250)
     bbox.set_height(len(wrapped_text.split('\n')) * 20 + 10)
+
+    annot.set_zorder(1000)
 
 def hover(event):
     vis = annot.get_visible()
