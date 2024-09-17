@@ -8,6 +8,10 @@ async function initializeGraph() {
     }
     const graphData = await response.json();
 
+    // graphData.elements.edges = graphData.elements.edges.filter(
+    //   (edge) => edge.data.weight >= 0.5
+    // );
+
     const cy = cytoscape({
       container: document.getElementById('cy'),
       elements: graphData.elements,
@@ -20,23 +24,26 @@ async function initializeGraph() {
             shape: 'circle',
             'background-color': 'blue',
             label: 'data(id)',
-            width: '5px', // Set node width to 5px
-            height: '5px', // Set node height to 5px
+            width: '20px', // Set a base width
+            height: '20px', // Set a base height
           },
         },
         {
           selector: 'edge',
           style: {
-            width: 1, // Increased for better visibility
-            'line-color': '#000',
+            width: 2, // Increased for better visibility
+            'line-color': '#ccc',
             'curve-style': 'bezier',
-            opacity: 'data(weight)', // Set opacity based on weight
+            opacity: (ele) => {
+              const weight = ele.data('weight');
+              // Apply a more aggressive transformation to the weight
+              return Math.pow(weight, 5);
+            },
           },
         },
       ],
       layout: {
         name: 'fcose',
-
         // 'draft', 'default' or 'proof'
         // - "draft" only applies spectral layout
         // - "default" improves the quality with incremental layout (fast cooling rate)
@@ -78,14 +85,14 @@ async function initializeGraph() {
         /* incremental layout options */
 
         // Node repulsion (non overlapping) multiplier
-        nodeRepulsion: (node) => 10000,
+        nodeRepulsion: (node) => 100,
         // Ideal edge (non nested) length
         idealEdgeLength: (edge) => {
           const weight = edge.data('weight');
           return 500 * (1 - Math.pow(weight, 4));
         },
         // Divisor to compute edge forces
-        edgeElasticity: (edge) => edge.data('weight'),
+        edgeElasticity: (edge) => Math.pow(edge.data('weight'), 3),
         // Nesting factor (multiplier) to compute ideal edge length for nested edges
         nestingFactor: 0.1,
         // Maximum number of iterations to perform - this is a suggested value and might be adjusted by the algorithm as required
@@ -131,6 +138,29 @@ async function initializeGraph() {
         stop: () => {}, // on layoutstop
       },
     });
+
+    // Adjust node size based on zoom level
+    const adjustNodeSize = () => {
+      const zoom = cy.zoom();
+      cy.nodes().forEach((node) => {
+        node.style({
+          width: `${10 / zoom}px`,
+          height: `${10 / zoom}px`,
+          'font-size': `${12 / zoom}px`, // Adjust font size
+        });
+      });
+      cy.edges().forEach((edge) => {
+        edge.style({
+          width: `${1 / zoom}px`, // Adjust edge width
+        });
+      });
+    };
+
+    // Initial adjustment
+    adjustNodeSize();
+
+    // Adjust on zoom
+    cy.on('zoom', adjustNodeSize);
 
     return cy;
   } catch (error) {
