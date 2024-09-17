@@ -15,3 +15,5 @@ Ugh I hate this
 > NOTE: these embeddings are fucking dope. Man the NLP people are amazing.
 
 2. Seperate file we are going to do D3. Fuck cytoscape. I hate cytoscape Fuck cytoscape. and Cola and cose and fcose and all this bs.
+
+Get D3 working and stuff [done]
