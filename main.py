@@ -6,8 +6,6 @@ import pickle
 import json
 import os
 import test_content
-import streamlit as st
-import pandas as pd
 
 class Text_chunk:
     def __init__(self, id, content, model):
@@ -20,8 +18,8 @@ class Text_chunk:
 
 def create_graph(content_chunks):
         
-    if os.path.exists('graph.pkl') and os.path.exists('sim.pkl'):
-        print('Both exist, loading them up')
+    if os.path.exists('d3_graph_data.json') and os.path.exists('sim.pkl'):
+        print('Both graph and sim exist, loading them up')
         with open('graph.pkl', 'rb') as f:
             G = pickle.load(f)
         with open('sim.pkl', 'rb') as f:
@@ -57,21 +55,24 @@ def create_graph(content_chunks):
         similarities.append({"id":chunk1.id,"content":chunk1.content,"comp_chunks": this_chunk_similiarities})
     #need to save G to a json (or maybe need to pkl?) and need to save similarities to python (for debugging debugger UI)
 
-    with open('graph.pkl', 'wb') as f:
-        pickle.dump(G, f)
+    #parser (turn the graph into nodes and elements (maybe print to debug))
+    nodes = [{"id": node, "content": G.nodes[node]["content"]} for node in G.nodes()]
+    links = [{"source": u, "target": v, "weight": d["weight"]} for u, v, d in G.edges(data=True)]
+
+    d3_compatible_data = {
+        "nodes": nodes,
+        "links": links
+    }
+
+    print(d3_compatible_data)
+
+    # Save this data to a JSON file
+    with open('d3_graph_data.json', 'w') as f:
+        json.dump(d3_compatible_data, f)
     
     with open('sim.pkl', 'wb') as f:
         pickle.dump(similarities, f)
             
-    return G, similarities
-
-def print_most_similar_pairs(similarities, top_n=5):
-
-    for sim_data in similarities:
-        print('CHUNK:', sim_data["id"], 'CONTENT', sim_data["content"][:50])
-        for comp_chunk in sim_data["comp_chunks"][:top_n]:
-            print("     cos_sim =",comp_chunk['cos_sim'],'content =', comp_chunk['content'][:50])
+    return d3_compatible_data, similarities
 
 graph, similar = create_graph(test_content.combined_notes)
-
-print_most_similar_pairs(similar)

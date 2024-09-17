@@ -17,3 +17,5 @@ Ugh I hate this
 2. Seperate file we are going to do D3. Fuck cytoscape. I hate cytoscape Fuck cytoscape. and Cola and cose and fcose and all this bs.
 
 Get D3 working and stuff [done]
+
+Do some D3 weights and see if we can get lengths in a way that makes sense

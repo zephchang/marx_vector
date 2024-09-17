@@ -45,14 +45,14 @@ const nodes = [
 ];
 
 const links = [
-  { source: 'A', target: 'B' },
-  { source: 'A', target: 'C' },
-  { source: 'A', target: 'D' },
-  { source: 'B', target: 'G' },
-  { source: 'D', target: 'E' },
-  { source: 'D', target: 'H' },
-  { source: 'E', target: 'F' },
-  { source: 'E', target: 'H' },
+  { source: 'A', target: 'B', weight: 0.5 },
+  { source: 'A', target: 'C', weight: 0.6 },
+  { source: 'A', target: 'D', weight: 0.4 },
+  { source: 'B', target: 'G', weight: 0.7 },
+  { source: 'D', target: 'E', weight: 0.5 },
+  { source: 'D', target: 'H', weight: 0.8 }, // random one with 0.8
+  { source: 'E', target: 'F', weight: 0.6 },
+  { source: 'E', target: 'H', weight: 0.7 },
 ];
 
 const svg = d3
@@ -66,12 +66,14 @@ svg.append('g').attr('class', 'nodes');
 
 const simulation = d3 //ok time to intiative the simulation. we use the forceSimulation constructor which constructs a force simulation element using nodes as the input. Note - this does not go into SVG yet, it is just a loose object on the workbench (similar to createElement in vanilla)
   .forceSimulation(nodes)
-  .force('charge', d3.forceManyBody().strength(-50))
+  .force('charge', d3.forceManyBody().strength(-100))
   .force('center', d3.forceCenter(width / 2, height / 2))
   .force(
     'link',
-    d3.forceLink(links).id((d) => d.name) //so forceLink(links) basically says apply all the force links based on this link schema. Howevedr as a caveat forceLink wants to know hey for your link schema when you specify source and target, what attrribute of your nodes (d) are you referring to as your id for linking? in this case we are using name.
-
+    d3
+      .forceLink(links)
+      .id((d) => d.name) //so forceLink(links) basically says apply all the force links based on this link schema. Howevedr as a caveat forceLink wants to know hey for your link schema when you specify source and target, what attrribute of your nodes (d) are you referring to as your id for linking? in this case we are using name.
+      .strength((d) => Math.pow(Math.E, 5 * (d.weight - 1)))
     //note: d = data
   )
   .on('tick', ticked); //tick is like some pseudo time thing. Every time you hear a tick run ticked (this is liek an event listener)
