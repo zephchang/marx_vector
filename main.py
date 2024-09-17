@@ -19,6 +19,7 @@ class Text_chunk:
         return f"S{self.id}: {self.content}"
 
 def create_graph():
+    print('INITATING PRINTING GRAPH \n\n\n BE PATIENT')
     G = nx.Graph()
 
     model = SentenceTransformer('BAAI/bge-large-en-v1.5')
@@ -51,6 +52,7 @@ def get_graph():
         with open(graph_file, 'r') as f:
             graph_data = json.load(f)
         print('Loaded existing graph data from json file')
+        print(graph_data)
         return graph_data
     
     else:
@@ -63,6 +65,11 @@ def get_graph():
         print(f'Created and saved new graph data to {graph_file}')
         
         return graph_data
+
+@app.route('/api/test')
+def test_api():
+    print("Test API called")
+    return jsonify({"message": "Hello from Flask!"})
 
 
 @app.route('/')
