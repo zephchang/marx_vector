@@ -3,14 +3,13 @@ from sentence_transformers import SentenceTransformer
 from scipy.spatial.distance import cosine
 import numpy as np
 import networkx as nx
-import pickle
+import json
 import os
-import content
+import test_content
 
 app = Flask(__name__)
 
-
-class Sentence:
+class Text_chunk:
     def __init__(self, id, content, model):
         self.id = id
         self.content = content
@@ -21,50 +20,50 @@ class Sentence:
 
 def create_graph():
     G = nx.Graph()
-    alpha = 15
-    graph_file = 'sentence_graph.pkl'
-    redo_pkl = False
 
-    if not redo_pkl and os.path.exists(graph_file):
-        # Load the existing graph if the file exists
-        with open(graph_file, 'rb') as f:
-            G = pickle.load(f) #this unpickles the data
-        print("Loaded existing graph from file.")
-    else:
-        model = SentenceTransformer('BAAI/bge-large-en-v1.5')
-        print('start making sentences and calculate embeddings')
+    model = SentenceTransformer('BAAI/bge-large-en-v1.5')
+    print('start making sentences and calculate embeddings')
 
-        content_chunks = content.combined_notes
-        # Create Sentence objects
-        sentences = []
+    content_chunks = test_content.combined_notes
+    # Create chunks
+    chunks = []
 
-        for i, content in enumerate(content_chunks):
-            sentence = Sentence(i, content, model)
-            sentences.append(sentence)
+    for i, content in enumerate(content_chunks):
+        text_chunk = Text_chunk(i, content, model)
+        chunks.append(text_chunk)
 
-        print('done making sentences and calculate embeddings')
+    print('done making sentences and calculate embeddings')
 
-        for s1 in sentences:
-            G.add_node(s1.id, sentence=s1.content)
-            for s2 in sentences:
-                if s1.id < s2.id:  # Avoid duplicate calculations
-                    similarity = 1 - cosine(s1.embedding, s2.embedding)
-                    G.add_edge(s1.id, s2.id, weight=round(similarity, 4))
-
-        # Save the graph to a file
-        with open(graph_file, 'wb') as f:
-            pickle.dump(G, f)
-        print("Created and saved new graph to file.")
-    
+    for chunk1 in chunks:
+        G.add_node(chunk1.id, id=chunk1.id, content=chunk1.content)
+        for chunk2 in chunks:
+            if chunk1.id < chunk2.id:  # Avoid duplicate calculations
+                similarity = 1 - cosine(chunk1.embedding, chunk2.embedding)
+                G.add_edge(chunk1.id, chunk2.id, weight=round(similarity, 4))
     return G
 
 @app.route('/api/graph')
 def get_graph():
     print('python BE api called')
-    G = create_graph()
-    # Convert graph to JSON-serializable format
-    graph_data = nx.node_link_data(G)
-    return jsonify(graph_data)
+
+    graph_file = 'sentence_graph.json'
+    if os.path.exists(graph_file):
+        with open(graph_file, 'r') as f:
+            graph_data = json.load(f)
+        print('Loaded existing graph data from json file')
+        return graph_data
+    
+    else:
+        print('create graph triggered')
+        G = create_graph()
+        graph_data = nx.cytoscape_data(G, name='name', ident='id' )
+
+        with open(graph_file, 'w') as f:
+            json.dump(graph_data, f)
+        print(f'Created and saved new graph data to {graph_file}')
+        
+        return graph_data
+
 
 @app.route('/')
 def index():
