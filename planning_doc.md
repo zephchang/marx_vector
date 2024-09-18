@@ -20,6 +20,22 @@ Get D3 working and stuff [done]
 
 Do some D3 weights and see if we can get lengths in a way that makes sense [done]
 
-Setup main.py to rank links in order by number. That's probably just a link attribute. Then on the script.js side we can serve only a subset. Probably top 5 or you could say top 5 & above threshold of .6 or something like that.
+Setup main.py to rank links in order by number. That's probably just a link attribute. Then on the script.js side we can serve only a subset. Probably top 5 or you could say top 5 & above threshold of .6 or something like that. [done]
 
-then we can weight them equally or set link length + repel and go from there, maybe that's prettier. I wonder how obsidian does it. Optimize for PRETTY not informational
+then we can weight them equally or set link length + repel and go from there, maybe that's prettier. I wonder how obsidian does it. Optimize for PRETTY not informational [done]
+
+Ok so now what? I am imagining two use cases. First is to show a graph of a book. The second is to add in notes handful by handful as some kind of progress or growth.
+
+> labels on nodes [done] this does indeed make things look very cool. LLM could do this well.
+
+> different colors for different chapters
+
+> let's try doing a shit ton of nodes.
+
+> let's try just straight up using chapters from marx and see what happens.
+
+> page rank size of node by how many links go to it - and then color red yellow green blue based on size.
+
+> what is the done state? do all of capital (or a bunch of chapters) and get it as pretty as possible.
+
+https://cambridge-intelligence.com/automatic-graph-layouts/

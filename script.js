@@ -11,7 +11,7 @@ fetch('d3_graph_data.json')
 function createGraph(data) {
   const nodes = data.nodes;
   const links = data.links.filter(
-    (link) => link.rank <= 4 && link.weight >= 0.7
+    (link) => link.rank <= 3 && link.weight >= 0.6
   );
 
   // ... rest of your existing code ...
@@ -42,16 +42,8 @@ function createGraph(data) {
 
   const simulation = d3 //ok time to intiative the simulation. we use the forceSimulation constructor which constructs a force simulation element using nodes as the input. Note - this does not go into SVG yet, it is just a loose object on the workbench (similar to createElement in vanilla)
     .forceSimulation(nodes)
-    .force('charge', d3.forceManyBody().strength(-50))
+    .force('charge', d3.forceManyBody().strength(-200))
     .force('center', d3.forceCenter(width / 2, height / 2))
-    .force(
-      'link',
-      d3
-        .forceLink(links)
-        .id((d) => d.id)
-        .distance(1) // Set the link length to 1
-        .strength(0)
-    )
     .force(
       'link',
       d3
@@ -62,6 +54,31 @@ function createGraph(data) {
       //note: d = data
     )
     .on('tick', ticked); //tick is like some pseudo time thing. Every time you hear a tick run ticked (this is liek an event listener)
+
+  function drag(simulation) {
+    function dragstarted(event, d) {
+      if (!event.active) simulation.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    }
+
+    function dragged(event, d) {
+      d.fx = event.x;
+      d.fy = event.y;
+    }
+
+    function dragended(event, d) {
+      if (!event.active) simulation.alphaTarget(0);
+      d.fx = null;
+      d.fy = null;
+    }
+
+    return d3
+      .drag()
+      .on('start', dragstarted)
+      .on('drag', dragged)
+      .on('end', dragended);
+  }
 
   const tooltip = d3
     .select('body')
@@ -82,10 +99,11 @@ function createGraph(data) {
       .selectAll('circle') //creates a selection of all the circle elements (could be none)
       .data(nodes) //.data lines up the circle elements with nodes - if tehre are any comon keys, we match them, otherwise we just use array indices. We are literally joining together the circle DOM elements with the node data element - they are bound together. Somehow this is very useful later
       .join('circle') // now we take the selection and data which have been lined up, and modify the DOM accordingly, adding or removing any elements while keeping the bindings the same.
-      .attr('r', 5) // radius of your circles set to 5
+      .attr('r', 10) // radius of your circles set to 5
       .attr('fill', '#69b3a2') //color of circles declared
       .attr('cx', (d) => d.x) //set center of circle to the node's x value. Note x and y were not specified but actually forceSimulator added those attributes when it was created
       .attr('cy', (d) => d.y)
+      .call(drag(simulation))
 
       .on('mouseover', (event, d) => {
         tooltip.transition().duration(500).style('opacity', 0.9);
@@ -100,10 +118,12 @@ function createGraph(data) {
       .selectAll('text')
       .data(nodes)
       .join('text')
-      .text((d) => d.id)
-      .attr('x', (d) => d.x + 8)
-      .attr('y', (d) => d.y + 5)
-      .attr('font-size', '12px');
+      .text((d) => d.content.slice(0, 20))
+      .attr('x', (d) => d.x + 0)
+      .attr('y', (d) => d.y - 20)
+      .attr('text-anchor', 'middle')
+      .attr('dominant-baseline', 'central')
+      .attr('font-size', '15px');
   }
 
   function updateLinks() {
