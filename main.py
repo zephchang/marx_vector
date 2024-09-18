@@ -18,14 +18,14 @@ class Text_chunk:
 
 def create_graph(content_chunks):
         
-    if os.path.exists('d3_graph_data.json') and os.path.exists('sim.pkl'):
+    if False and os.path.exists('d3_graph_data.json') and os.path.exists('sim.pkl'):
         print('Both graph and sim exist, loading them up')
-        with open('graph.pkl', 'rb') as f:
-            G = pickle.load(f)
+        with open('d3_graph_data.json', 'r') as f:
+            d3_compatible_data = json.load(f)
         with open('sim.pkl', 'rb') as f:
             similarities = pickle.load(f)
         
-        return G, similarities
+        return d3_compatible_data, similarities
     
     print('INITATING GRAPH BE PATIENT \n\n\n NEED TO DOWNLOAD BAAI')
     G = nx.Graph()
@@ -48,16 +48,18 @@ def create_graph(content_chunks):
         for chunk2 in chunks:
             if chunk1.id != chunk2.id:
                 cos_sim = 1 - cosine(chunk1.embedding, chunk2.embedding)
-                G.add_edge(chunk1.id, chunk2.id, weight=round(cos_sim, 4))
-                this_chunk_similiarities.append({"id": chunk2.id, "content": chunk2.content, "cos_sim":cos_sim})
-
+                this_chunk_similiarities.append({"id": chunk2.id, "content": chunk2.content, "cos_sim": round(cos_sim, 4)})
         this_chunk_similiarities.sort(key=lambda x: x["cos_sim"], reverse=True)
-        similarities.append({"id":chunk1.id,"content":chunk1.content,"comp_chunks": this_chunk_similiarities})
-    #need to save G to a json (or maybe need to pkl?) and need to save similarities to python (for debugging debugger UI)
 
-    #parser (turn the graph into nodes and elements (maybe print to debug))
+        for i, edge_data in enumerate(this_chunk_similiarities):
+            G.add_edge(chunk1.id, edge_data['id'], weight=edge_data['cos_sim'], rank=i)
+
+        similarities.append({"id":chunk1.id,"content":chunk1.content,"comp_chunks": this_chunk_similiarities})
+    #ok now G is all set up correctly
+
+    #d3 parser (turn the graph into nodes and elements (maybe print to debug))
     nodes = [{"id": node, "content": G.nodes[node]["content"]} for node in G.nodes()]
-    links = [{"source": u, "target": v, "weight": d["weight"]} for u, v, d in G.edges(data=True)]
+    links = [{"source": u, "target": v, "weight": d["weight"], "rank":d["rank"]} for u, v, d in G.edges(data=True)]
 
     d3_compatible_data = {
         "nodes": nodes,
@@ -66,13 +68,14 @@ def create_graph(content_chunks):
 
     print(d3_compatible_data)
 
-    # Save this data to a JSON file
+    # Save this data to a JSON file (run the script to access it)
     with open('d3_graph_data.json', 'w') as f:
         json.dump(d3_compatible_data, f)
     
+    #pkl this data (run debug_embed) to use it
     with open('sim.pkl', 'wb') as f:
         pickle.dump(similarities, f)
             
     return d3_compatible_data, similarities
 
-graph, similar = create_graph(test_content.combined_notes)
+d3_compatible, similar = create_graph(test_content.combined_notes)

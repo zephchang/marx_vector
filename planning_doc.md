@@ -18,4 +18,8 @@ Ugh I hate this
 
 Get D3 working and stuff [done]
 
-Do some D3 weights and see if we can get lengths in a way that makes sense
+Do some D3 weights and see if we can get lengths in a way that makes sense [done]
+
+Setup main.py to rank links in order by number. That's probably just a link attribute. Then on the script.js side we can serve only a subset. Probably top 5 or you could say top 5 & above threshold of .6 or something like that.
+
+then we can weight them equally or set link length + repel and go from there, maybe that's prettier. I wonder how obsidian does it. Optimize for PRETTY not informational
