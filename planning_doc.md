@@ -28,7 +28,15 @@ Ok so now what? I am imagining two use cases. First is to show a graph of a book
 
 > labels on nodes [done] this does indeed make things look very cool. LLM could do this well.
 
+> get labels that are actually relevant [done]
+
+> setup main.py so that we pass in the richer data to the d3 grapher [done]
+
+> rewrite main.py completely
+
 > different colors for different chapters
+
+> count links to node and size/color based on backlinks
 
 > let's try doing a shit ton of nodes.
 

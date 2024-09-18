@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from main import create_graph, test_content
+from embed import create_graph, test_content
 
 # Create the graph and get similarities
 graph, similarities = create_graph(test_content.combined_notes)
