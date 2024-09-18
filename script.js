@@ -11,11 +11,11 @@ fetch('d3_graph_data.json')
 function createGraph(data) {
   const nodes = data.nodes;
   const links = data.links.filter(
-    (link) => link.rank <= 4 && link.weight >= 0.6
+    (link) => link.rank <= 4 && link.weight >= 0.7
   );
 
   // ... rest of your existing code ...
-  const width = 900, //for use in the svg creation later
+  const width = 1500, //for use in the svg creation later
     height = 900;
 
   const svg = d3
@@ -42,7 +42,7 @@ function createGraph(data) {
 
   const simulation = d3 //ok time to intiative the simulation. we use the forceSimulation constructor which constructs a force simulation element using nodes as the input. Note - this does not go into SVG yet, it is just a loose object on the workbench (similar to createElement in vanilla)
     .forceSimulation(nodes)
-    .force('charge', d3.forceManyBody().strength(-200))
+    .force('charge', d3.forceManyBody().strength(-50))
     .force('center', d3.forceCenter(width / 2, height / 2))
     .force(
       'link',
@@ -50,17 +50,32 @@ function createGraph(data) {
         .forceLink(links)
         .id((d) => d.id)
         .distance(1) // Set the link length to 1
-        .strength(0.5)
+        .strength(0)
     )
-    // .force(
-    //   'link',
-    //   d3
-    //     .forceLink(links)
-    //     .id((d) => d.id) //so forceLink(links) basically says apply all the force links based on this link schema. Howevedr as a caveat forceLink wants to know hey for your link schema when you specify source and target, what attrribute of your nodes (d) are you referring to as your id for linking? in this case we are using name.
-    //     .strength((d) => Math.pow(Math.E, 10 * (d.weight - 1)))
-    //   //note: d = data
-    // )
+    .force(
+      'link',
+      d3
+        .forceLink(links)
+        .id((d) => d.id)
+        .distance(1) //so forceLink(links) basically says apply all the force links based on this link schema. Howevedr as a caveat forceLink wants to know hey for your link schema when you specify source and target, what attrribute of your nodes (d) are you referring to as your id for linking? in this case we are using name.
+        .strength((d) => Math.pow(Math.E, 10 * (d.weight - 1)))
+      //note: d = data
+    )
     .on('tick', ticked); //tick is like some pseudo time thing. Every time you hear a tick run ticked (this is liek an event listener)
+
+  const tooltip = d3
+    .select('body')
+    .append('div')
+    .attr('class', 'tooltip')
+    .style('opacity', 0) // Make it fully opaque
+    .style('font-size', '12px') // Make the text smaller
+    .style('width', '200px') // Set the width
+    .style('position', 'fixed') // Position it fixed
+    .style('background-color', 'white') // Set background to white
+    .style('font-family', 'Arial, sans-serif') // Set font to Arial
+    .style('border', '1px solid #ccc') // Add a light border for elegance
+    .style('border-radius', '8px') // Add rounded corners for elegance
+    .style('padding', '10px'); // Add padding for elegance
 
   function updateNodes() {
     d3.select('.nodes') //selects group nodes (was defined as a class earlier) so note we are manipulating the groups inside the svg, though not the svg itself.
@@ -70,8 +85,15 @@ function createGraph(data) {
       .attr('r', 5) // radius of your circles set to 5
       .attr('fill', '#69b3a2') //color of circles declared
       .attr('cx', (d) => d.x) //set center of circle to the node's x value. Note x and y were not specified but actually forceSimulator added those attributes when it was created
-      .attr('cy', (d) => d.y);
+      .attr('cy', (d) => d.y)
 
+      .on('mouseover', (event, d) => {
+        tooltip.transition().duration(500).style('opacity', 0.9);
+        tooltip
+          .html(d.content)
+          .style('left', event.pageX + 10 + 'px')
+          .style('top', event.pageY - 10 + 'px');
+      });
     //shoudl try styling circles using css rather than inline
 
     d3.select('.nodes') //note our text is really a seperate set f DOM elements they look nice with circles because both rely on absolute positioning from the d.x and d.y data.

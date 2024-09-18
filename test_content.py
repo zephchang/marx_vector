@@ -1,5 +1,5 @@
 def prep_for_embedding(content):
-    split_text = content.split("\n")
+    split_text = [line for line in content.split("\n") if line.strip()]
     return split_text
 
 marx_10_notes = prep_for_embedding("""Commodities cannot exchange themselves; their owners must engage in the exchange process. This highlights the social nature of commodity exchange and introduces the concept of commodity owners as "guardians" of their goods. The exchange process requires mutual recognition of private property rights between owners, reflecting the underlying economic relationships in juridical form.
