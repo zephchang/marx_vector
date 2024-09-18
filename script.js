@@ -11,7 +11,7 @@ fetch('d3_graph_data.json')
 function createGraph(data) {
   const nodes = data.nodes;
   const links = data.links.filter(
-    (link) => link.rank <= 3 && link.weight >= 0.6
+    (link) => (link.rank <= 3 && link.cos_sim >= 0.85) || link.rank == 0
   );
 
   // ... rest of your existing code ...
@@ -22,7 +22,12 @@ function createGraph(data) {
     .select('#chart-container') //this is bascially like vanilla JS element selector and then we element create svg and then set it's styling to width height etc
     .append('svg')
     .attr('width', width)
-    .attr('height', height);
+    .attr('height', height)
+    .style('background-color', '#1a1a1a');
+
+  svg.on('click', () => {
+    tooltip.transition().duration(200).style('opacity', 0);
+  });
 
   // Add a group for zoom transformation
   const g = svg.append('g');
@@ -42,15 +47,15 @@ function createGraph(data) {
 
   const simulation = d3 //ok time to intiative the simulation. we use the forceSimulation constructor which constructs a force simulation element using nodes as the input. Note - this does not go into SVG yet, it is just a loose object on the workbench (similar to createElement in vanilla)
     .forceSimulation(nodes)
-    .force('charge', d3.forceManyBody().strength(-200))
+    .force('charge', d3.forceManyBody().strength(-400))
     .force('center', d3.forceCenter(width / 2, height / 2))
     .force(
       'link',
       d3
         .forceLink(links)
-        .id((d) => d.id)
+        .id((d) => d.global_id)
         .distance(1) //so forceLink(links) basically says apply all the force links based on this link schema. Howevedr as a caveat forceLink wants to know hey for your link schema when you specify source and target, what attrribute of your nodes (d) are you referring to as your id for linking? in this case we are using name.
-        .strength((d) => Math.pow(Math.E, 10 * (d.weight - 1)))
+        .strength((d) => Math.pow(Math.E, 10 * (d.cos_sim - 1)))
       //note: d = data
     )
     .on('tick', ticked); //tick is like some pseudo time thing. Every time you hear a tick run ticked (this is liek an event listener)
@@ -84,46 +89,55 @@ function createGraph(data) {
     .select('body')
     .append('div')
     .attr('class', 'tooltip')
-    .style('opacity', 0) // Make it fully opaque
-    .style('font-size', '12px') // Make the text smaller
-    .style('width', '200px') // Set the width
-    .style('position', 'fixed') // Position it fixed
-    .style('background-color', 'white') // Set background to white
-    .style('font-family', 'Arial, sans-serif') // Set font to Arial
-    .style('border', '1px solid #ccc') // Add a light border for elegance
-    .style('border-radius', '8px') // Add rounded corners for elegance
-    .style('padding', '10px'); // Add padding for elegance
+    .style('opacity', 0)
+    .style('position', 'absolute')
+    .style('background-color', '#fffec8')
+    .style('border-radius', '3px')
+    .style('width', '300px')
+    .style('padding', '10px')
+    .style('font-family', 'Arial, sans-serif')
+    .style('font-size', '14px')
+    .style('pointer-events', 'none')
+    .style('z-index', '9999') // Ensure it's on top of other elements
+    .html('Test Tooltip'); // Add some initial content
 
   function updateNodes() {
-    d3.select('.nodes') //selects group nodes (was defined as a class earlier) so note we are manipulating the groups inside the svg, though not the svg itself.
+    const node = d3
+      .select('.nodes') //selects group nodes (was defined as a class earlier) so note we are manipulating the groups inside the svg, though not the svg itself.
       .selectAll('circle') //creates a selection of all the circle elements (could be none)
       .data(nodes) //.data lines up the circle elements with nodes - if tehre are any comon keys, we match them, otherwise we just use array indices. We are literally joining together the circle DOM elements with the node data element - they are bound together. Somehow this is very useful later
       .join('circle') // now we take the selection and data which have been lined up, and modify the DOM accordingly, adding or removing any elements while keeping the bindings the same.
       .attr('r', 10) // radius of your circles set to 5
       .attr('fill', '#69b3a2') //color of circles declared
       .attr('cx', (d) => d.x) //set center of circle to the node's x value. Note x and y were not specified but actually forceSimulator added those attributes when it was created
-      .attr('cy', (d) => d.y)
-      .call(drag(simulation))
+      .attr('cy', (d) => d.y);
 
-      .on('mouseover', (event, d) => {
-        tooltip.transition().duration(500).style('opacity', 0.9);
-        tooltip
-          .html(d.content)
-          .style('left', event.pageX + 10 + 'px')
-          .style('top', event.pageY - 10 + 'px');
-      });
+    node.call(drag(simulation));
+
+    node.on('click', (event, d) => {
+      event.stopPropagation();
+      tooltip.transition().duration(200).style('opacity', 1);
+      tooltip
+        .html(d.content)
+        .style('left', `${event.pageX + 10}px`)
+        .style('top', `${event.pageY - 10}px`);
+    });
+
     //shoudl try styling circles using css rather than inline
 
     d3.select('.nodes') //note our text is really a seperate set f DOM elements they look nice with circles because both rely on absolute positioning from the d.x and d.y data.
       .selectAll('text')
       .data(nodes)
       .join('text')
-      .text((d) => d.content.slice(0, 20))
+      .text((d) => d.label)
       .attr('x', (d) => d.x + 0)
       .attr('y', (d) => d.y - 20)
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
-      .attr('font-size', '15px');
+      .attr('font-family', "'Helvetica Neue', Arial, sans-serif")
+      .attr('font-weight', '350')
+      .style('text-transform', 'capitalize')
+      .style('fill', '#f0f0f0');
   }
 
   function updateLinks() {

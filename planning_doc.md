@@ -36,6 +36,8 @@ Ok so now what? I am imagining two use cases. First is to show a graph of a book
 
 > get streamlit inspector for embeds rewritten [done]
 
+> get the new stuff hooked up to d3
+
 > different colors for different chapters
 
 > count links to node and size/color based on backlinks
