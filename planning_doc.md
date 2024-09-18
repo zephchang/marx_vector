@@ -32,7 +32,9 @@ Ok so now what? I am imagining two use cases. First is to show a graph of a book
 
 > setup main.py so that we pass in the richer data to the d3 grapher [done]
 
-> rewrite main.py completely
+> rewrite main.py completely [done]
+
+> get streamlit inspector for embeds rewritten [done]
 
 > different colors for different chapters
 

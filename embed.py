@@ -34,7 +34,7 @@ def add_embeds(nodes):
     #inspect_embeds list looks like {"global_id":chunk1.id,"content":chunk1.content,"comp_chunks": this_chunk_similiarities}
 
     edges =[]
-    inspect_embeds = []
+    inspect_embeds = [] #ok so the goal for inspect embeds is fairly simple. We want to go through the nodes, and then for each node, find all of the links that have that node as the source and then display the targets. Hm how about we just do this in an ugly but workable way. 
 
     for node1 in nodes:
         ranked_edges = []

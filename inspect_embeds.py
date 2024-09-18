@@ -1,22 +1,52 @@
 import streamlit as st
 import pandas as pd
-from embed import create_graph, test_content
+import json
 
-# Create the graph and get similarities
-graph, similarities = create_graph(test_content.combined_notes)
+with open('d3_graph_data.json', "r") as file:
+    graph_data = json.load(file)
+
+nodes = graph_data["nodes"]
+links = graph_data["links"]
+
+#ok so our basic idea is that we are going to go through nodes and for each node we are going to grab the glboal id. Then look through links for all links which have source = that global_id (should be sorted already) just append to list
+
+
+processed_nodes = []
+for node in nodes:
+    node_id = node["global_id"]
+    node_links = []
+    for link in links:
+        if link["source"] ==node_id:
+            node_links.append(link)
+    node_links.sort(key=lambda x: x["cos_sim"], reverse=True)
+
+    processed_nodes.append({
+        "id":node_id,
+        "content": node["content"],
+        "links":node_links
+})
+
+#ok now somehow display this in streamlit and streamlit should display the content of the anchor node (that would be node["content"] and then all the other nodes below, their node["content"] and node[cos_sim] ranked (butthe list should be sorted by rank anyway))
+
 
 st.title("Embedding Similarity Debugger")
 
-# Create tabs for each chunk
-tabs = st.tabs([f"Chunk {sim['id']}" for sim in similarities])
+# Create tabs for each processed node
+tabs = st.tabs([f"Chunk {node['id']}" for node in processed_nodes])
 
 for i, tab in enumerate(tabs):
     with tab:
-        st.header(f"Chunk {similarities[i]['id']}")
-        st.text_area("Content", similarities[i]['content'], height=200, key=f"content_{i}")
+        st.header(f"Chunk {processed_nodes[i]['id']}")
+        st.text_area("Content", processed_nodes[i]['content'], height=200, key=f"content_{i}")
         
         st.subheader("Similar Chunks")
-        df = pd.DataFrame(similarities[i]['comp_chunks'])
-        df = df[['id', 'cos_sim', 'content']]
-        # No truncation needed for content display
+        
+        # Create a DataFrame from the links
+        df = pd.DataFrame(processed_nodes[i]['links'])
+        df = df[['target', 'cos_sim']]
+        
+        # Add content to the DataFrame
+        df['content'] = df['target'].apply(lambda x: next((node['content'] for node in nodes if node['global_id'] == x), None))
+        
+        # Display the DataFrame
         st.dataframe(df, height=400, key=f"dataframe_{i}")
