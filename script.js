@@ -1,5 +1,3 @@
-//import d3 graph data json data
-
 fetch('d3_graph_data.json')
   .then((response) => response.json())
   .then((data) => {
@@ -8,13 +6,36 @@ fetch('d3_graph_data.json')
   })
   .catch((error) => console.error('Error loading the JSON file:', error));
 
+function drag(simulation) {
+  function dragstarted(event, d) {
+    if (!event.active) simulation.alphaTarget(0.3).restart();
+    d.fx = d.x;
+    d.fy = d.y;
+  }
+
+  function dragged(event, d) {
+    d.fx = event.x;
+    d.fy = event.y;
+  }
+
+  function dragended(event, d) {
+    if (!event.active) simulation.alphaTarget(0);
+    d.fx = null;
+    d.fy = null;
+  }
+
+  return d3
+    .drag()
+    .on('start', dragstarted)
+    .on('drag', dragged)
+    .on('end', dragended);
+}
+
 function createGraph(data) {
   const nodes = data.nodes;
   const links = data.links.filter(
     (link) => (link.rank <= 3 && link.cos_sim >= 0.85) || link.rank == 0
   );
-
-  // ... rest of your existing code ...
   const width = 1500, //for use in the svg creation later
     height = 900;
 
@@ -23,17 +44,7 @@ function createGraph(data) {
     .append('svg')
     .attr('width', width)
     .attr('height', height)
-    .style('background-color', '#1a1a1a');
-
-  svg.on('click', () => {
-    tooltip.transition().duration(200).style('opacity', 0);
-  });
-
-  // Add a group for zoom transformation
-  const g = svg.append('g');
-
-  g.append('g').attr('class', 'links'); //ok now we create two groupings of links and nodes (which are kinda like divs
-  g.append('g').attr('class', 'nodes');
+    .style('background-color', '#0a1a2f');
 
   // Add zoom behavior
   const zoom = d3
@@ -43,48 +54,55 @@ function createGraph(data) {
       g.attr('transform', event.transform);
     });
 
+  // Hide tooltip
+  svg.on('click', () => {
+    tooltip.transition().duration(200).style('opacity', 0);
+  });
+
   svg.call(zoom);
 
-  const simulation = d3 //ok time to intiative the simulation. we use the forceSimulation constructor which constructs a force simulation element using nodes as the input. Note - this does not go into SVG yet, it is just a loose object on the workbench (similar to createElement in vanilla)
+  const g = svg.append('g');
+  g.append('g').attr('class', 'links');
+  g.append('g').attr('class', 'nodes');
+
+  //Construct force simulation
+  const simulation = d3
     .forceSimulation(nodes)
-    .force('charge', d3.forceManyBody().strength(-400))
+
+    // ELECTROSTATIC CHARGE - (nodes push away from each other)
+    .force(
+      'charge',
+      d3.forceManyBody().strength(-800).distanceMax(20000).distanceMin(20)
+    )
+    // CENTERING FORCE (no relative effect)
     .force('center', d3.forceCenter(width / 2, height / 2))
+
+    // LINK FORCE (distance and strength are the main ones)
     .force(
       'link',
       d3
         .forceLink(links)
         .id((d) => d.global_id)
-        .distance(1) //so forceLink(links) basically says apply all the force links based on this link schema. Howevedr as a caveat forceLink wants to know hey for your link schema when you specify source and target, what attrribute of your nodes (d) are you referring to as your id for linking? in this case we are using name.
-        .strength((d) => Math.pow(Math.E, 10 * (d.cos_sim - 1)))
-      //note: d = data
+
+        //LINK DISTANCE (this causes packed nodes to spread out a bit)
+        .distance(20)
+        .strength((d) => {
+          if (d.cos_sim < 0.3) {
+            return -0.5; // Super repulsion
+          } else if (d.cos_sim < 0.5) {
+            return -0.5; // Mild repulsion
+          } else if (d.cos_sim < 0.7) {
+            return 0; // Decent attraction
+          } else if (d.cos_sim < 0.9) {
+            return 0.5; // Decent attraction
+          } else {
+            return 1; // Super attraction
+          }
+        })
     )
-    .on('tick', ticked); //tick is like some pseudo time thing. Every time you hear a tick run ticked (this is liek an event listener)
+    .on('tick', ticked); //on tick run the ticked function (which is going to update the UI)
 
-  function drag(simulation) {
-    function dragstarted(event, d) {
-      if (!event.active) simulation.alphaTarget(0.3).restart();
-      d.fx = d.x;
-      d.fy = d.y;
-    }
-
-    function dragged(event, d) {
-      d.fx = event.x;
-      d.fy = event.y;
-    }
-
-    function dragended(event, d) {
-      if (!event.active) simulation.alphaTarget(0);
-      d.fx = null;
-      d.fy = null;
-    }
-
-    return d3
-      .drag()
-      .on('start', dragstarted)
-      .on('drag', dragged)
-      .on('end', dragended);
-  }
-
+  //building tooltip
   const tooltip = d3
     .select('body')
     .append('div')
@@ -107,10 +125,11 @@ function createGraph(data) {
       .selectAll('circle') //creates a selection of all the circle elements (could be none)
       .data(nodes) //.data lines up the circle elements with nodes - if tehre are any comon keys, we match them, otherwise we just use array indices. We are literally joining together the circle DOM elements with the node data element - they are bound together. Somehow this is very useful later
       .join('circle') // now we take the selection and data which have been lined up, and modify the DOM accordingly, adding or removing any elements while keeping the bindings the same.
-      .attr('r', 10) // radius of your circles set to 5
-      .attr('fill', '#69b3a2') //color of circles declared
+      .attr('r', 5) // radius of your circles set to 5
+      .attr('fill', 'white') //color of circles declared
       .attr('cx', (d) => d.x) //set center of circle to the node's x value. Note x and y were not specified but actually forceSimulator added those attributes when it was created
       .attr('cy', (d) => d.y);
+    //building a custom drag function
 
     node.call(drag(simulation));
 
@@ -136,6 +155,7 @@ function createGraph(data) {
       .attr('dominant-baseline', 'central')
       .attr('font-family', "'Helvetica Neue', Arial, sans-serif")
       .attr('font-weight', '350')
+      .attr('font-size', '10px')
       .style('text-transform', 'capitalize')
       .style('fill', '#f0f0f0');
   }
@@ -145,9 +165,9 @@ function createGraph(data) {
       .selectAll('line')
       .data(links)
       .join('line')
-      .attr('stroke', '#999') //note all of these attr have this implicit forEach functionality. This is relevant because when we refer to d d refers to a single link object
-      .attr('stroke-opacity', 0.6)
-      .attr('stroke-width', 1)
+      .attr('stroke', 'white') //note all of these attr have this implicit forEach functionality. This is relevant because when we refer to d d refers to a single link object
+      .attr('stroke-opacity', 1)
+      .attr('stroke-width', 0.4)
       .attr('x1', (d) => d.source.x) //note that our joined object has both the svg line element and the data object. They are joined at the hip. So here we are updating the svg line element attribute x1 to match the d.sorce x. Note that attr has an implicit forEach functionalty so d refers to a single link object.
       .attr('y1', (d) => d.source.y)
       .attr('x2', (d) => d.target.x)

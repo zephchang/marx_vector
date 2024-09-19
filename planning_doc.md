@@ -36,7 +36,19 @@ Ok so now what? I am imagining two use cases. First is to show a graph of a book
 
 > get streamlit inspector for embeds rewritten [done]
 
-> get the new stuff hooked up to d3
+> get the new stuff hooked up to d3 [done]
+
+> let's try just straight up using chapters from marx and see what happens. [done]
+
+FEATURE IDEAS
+
+> clean up code
+
+> node and node text zoom
+
+> display text on right side that scrolls with paragraph.
+
+> try some text that is more skimmable (not marx) maybe like that book on god or something. Maybe the Jappe book.
 
 > different colors for different chapters
 
@@ -44,10 +56,15 @@ Ok so now what? I am imagining two use cases. First is to show a graph of a book
 
 > let's try doing a shit ton of nodes.
 
-> let's try just straight up using chapters from marx and see what happens.
-
 > page rank size of node by how many links go to it - and then color red yellow green blue based on size.
 
 > what is the done state? do all of capital (or a bunch of chapters) and get it as pretty as possible.
 
+> Move the styling outside of d3 so that we have more seperation of concerns css
+
 https://cambridge-intelligence.com/automatic-graph-layouts/
+
+> layout suggestions
+
+- perhaps a custom force to suggest against 180 degree links. Learn about custom forces more broadly
+- experiment with a manually defined attraction force (0-5 is repulsion, 5-7 is attraction 7-10 is super attraction)
