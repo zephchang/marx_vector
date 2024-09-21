@@ -42,9 +42,11 @@ Ok so now what? I am imagining two use cases. First is to show a graph of a book
 
 FEATURE IDEAS
 
-> clean up code
+> clean up the file structure a bit [done]
 
-> node and node text zoom
+> node and node text zoom [done]
+
+> link zooming kinda sucks - better to be beyond a certain threshold
 
 > display text on right side that scrolls with paragraph.
 
