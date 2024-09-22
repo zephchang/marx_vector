@@ -64,11 +64,6 @@ function createGraph(data) {
       .attr('y2', (d) => d.target.y);
   }
 
-  // Hide tooltip
-  svg.on('click', () => {
-    tooltip.transition().duration(200).style('opacity', 0);
-  });
-
   //Construct force simulation
   const simulation = d3
     .forceSimulation(nodes)
@@ -106,27 +101,6 @@ function createGraph(data) {
     )
     .on('tick', ticked); //on tick run the ticked function (which is going to update the UI)
 
-  //building tooltip
-  const tooltip = d3
-    .select('body')
-    .append('div')
-    .attr('class', 'tooltip') //note tooltip is styled somwhere else
-    .html('Test Tooltip'); // Add some initial content
-
-  tooltip //styling for tooltip
-    .style('position', 'absolute')
-    .style('text-align', 'center')
-    .style('width', '300px')
-    .style('padding', '10px')
-    .style('font-family', 'Arial, sans-serif')
-    .style('font-size', '14px')
-    .style('background-color', '#ffffe9')
-    .style('border', '0')
-    .style('border-radius', '3px')
-    .style('pointer-events', 'none')
-    .style('opacity', '0')
-    .style('z-index', '9999');
-
   function updateNodes() {
     //hm a note on what's going on here. So with vanilla vanilla JS, what happens is. (1) html creates the initial state of the C++ memory which represents the DOM. (2) We load JS. When JS selects an object, the browser translates that request into C++ and grabs the oject, translates that object to JS, and then returns that object to JS (which has element traits like .textContent) that we can modify. (3) When we take an action on that object, JS modifies the JS object, then tells browser to update the C++ to match the new object. (4) so selection is actualy translates to C++ find the object, translate to JS objects and present the script with the JS objects. From the JS programmer's point of view, it is as if there is a fully JS object DOM that lives above the C++ DOM but that's not actually the case.
 
@@ -162,13 +136,8 @@ function createGraph(data) {
 
     node.call(utils.custom_drag(simulation));
 
-    node.on('click', (event, d) => {
-      event.stopPropagation();
-      tooltip.transition().duration(200).style('opacity', 1);
-      tooltip
-        .html(d.content)
-        .style('left', `${event.pageX + 10}px`)
-        .style('top', `${event.pageY - 10}px`);
+    node.on('click', (event, node) => {
+      scrollToIndex(node.content_source, node.local_id);
     });
 
     const labels = d3
@@ -216,5 +185,34 @@ function createGraph(data) {
   simulation.restart();
 }
 
-console.log(window.innerWidth), //used in multiple places
-  console.log(window.innerHeight);
+//CONTENT PANEL (RIGHT SIDE)
+function createSidepanel(data) {
+  const nodes = data.nodes;
+  const sidebar = document.querySelector('.side-panel');
+
+  nodes.forEach((node) => {
+    const p_div = document.createElement('div');
+    p_div.classList.add('p-container');
+    const paragraph = document.createElement('p');
+    paragraph.classList.add('content-paragraph');
+    paragraph.textContent = node.content;
+    paragraph.dataset.index = `${node.content_source}_local-id-${node.local_id}`;
+    p_div.appendChild(paragraph); //ok now the child is in the paragraph and we have content in it
+    sidebar.appendChild(p_div);
+  });
+}
+
+function scrollToIndex(content_source, local_id) {
+  const allHighlighted = document.querySelectorAll('.side-panel .highlight');
+  allHighlighted.forEach((div) => div.classList.remove('highlight'));
+
+  const targetDiv = document.querySelector(
+    `.side-panel [data-index="${content_source}_local-id-${local_id}"]`
+  );
+  if (targetDiv) {
+    targetDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  targetDiv.classList.add('highlight');
+}
+
+createSidepanel(d3_graph_data);

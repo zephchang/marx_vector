@@ -52,12 +52,38 @@ text {
   font-size: 16px;
 }
 
-/* .side-panel {
+.side-panel {
   position: fixed;
   top: 0;
   right: 0;
   height: 100vh;
-  width: 30%;
+  width: 35%;
   z-index: 10000;
   background-color: rgb(255, 255, 255);
-} */
+  overflow-y: auto;
+}
+
+.p-container {
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 0;
+  padding-bottom: 0px;
+}
+
+.content-paragraph {
+  font-size: 16px;
+  font-family: Palatino, Arial, Helvetica, sans-serif;
+  z-index: 9;
+  line-height: 1.4;
+}
+
+.highlight {
+  background-color: rgb(255, 255, 218);
+}
+
+.content-paragraph {
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}

@@ -46,9 +46,17 @@ FEATURE IDEAS
 
 > node and node text zoom [done]
 
-> link zooming kinda sucks - better to be beyond a certain threshold
+> link zooming kinda sucks - better to be beyond a certain threshold [done]
 
-> display text on right side that scrolls with paragraph.
+Ok so our general approach is we are going to use as our data input a list of nodes from the book. At some point we'll rewrite the backend so that it delivers a lists of lists of ndodes (one list for each chapter).
+
+Anyway either way, what we do is we're going to take the book list and we are going to create a div for each paragraph in JS. How do we create that div? content is going to be paragraph content and then we also add index as a data attrribute of the div.
+
+So we have generated on the right the entire book, overflow y scroll etc.
+
+then it's simple enough - when you click on a node, take what is in the current right side div and select element with the data object book_title-index_9 or something like that and scroll such that that is centered center on the screen
+
+> in script.js, go through list of nodes and create divs for each one and insert into the right side div. so we get scroll
 
 > try some text that is more skimmable (not marx) maybe like that book on god or something. Maybe the Jappe book.
 
