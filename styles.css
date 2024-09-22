@@ -57,7 +57,7 @@ text {
   top: 0;
   right: 0;
   height: 100vh;
-  width: 35%;
+  width: 30%;
   z-index: 10000;
   background-color: rgb(255, 255, 255);
   overflow-y: auto;
@@ -71,7 +71,7 @@ text {
 }
 
 .content-paragraph {
-  font-size: 16px;
+  font-size: 14px;
   font-family: Palatino, Arial, Helvetica, sans-serif;
   z-index: 9;
   line-height: 1.4;

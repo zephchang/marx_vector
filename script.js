@@ -136,7 +136,8 @@ function createGraph(data) {
 
     node.call(utils.custom_drag(simulation));
 
-    node.on('click', (event, node) => {
+    node.on('dblclick', (event, node) => {
+      event.stopPropagation();
       scrollToIndex(node.content_source, node.local_id);
     });
 

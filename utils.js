@@ -29,7 +29,7 @@ export function custom_drag(simulation) {
     d.fx = event.x;
     d.fy = event.y;
     simulation.alpha(0.3).restart();
-  }, 400);
+  }, 0);
 
   function dragended(event, d) {
     if (!event.active) simulation.alphaTarget(0);
